@@ -7,6 +7,8 @@
 //
 
 #import "AppDelegate.h"
+#import "WXController.h"
+#import <TSMessage.h>
 
 @interface AppDelegate ()
 
@@ -16,7 +18,14 @@
             
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+    
+    
+    
+    [TSMessage setDefaultViewController: self.window.rootViewController];
+    
+    
+    
+    
     return YES;
 }
 
