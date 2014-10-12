@@ -45,6 +45,7 @@
 @property (nonatomic, strong) UIImageView *iconView;
 @property (nonatomic, strong) NSString *city;
 @property (nonatomic, strong) UIButton *settings;
+@property (nonatomic, strong) UITextField * searchField;
 
 @property (nonatomic, strong) NSDateFormatter *tableHourlyFormatter;
 @property (nonatomic, strong) NSDateFormatter *tableDailyFormatter;
@@ -265,16 +266,37 @@
                                           100);
     CGRect searchFieldFrame = CGRectMake((self.view.bounds.size.width - 200)/2,
                                           35,
-                                          200,
-                                          30);
+                                          170,
+                                          32);
+    CGRect searchButtonFrame = CGRectMake(searchFieldFrame.origin.x+172,
+                                         35,
+                                         32,
+                                         32);
     
     // Создание UIView для шапки таблицы
     UIView *searchHeader = [[UIView alloc] initWithFrame:searchHeaderFrame];
     searchHeader.backgroundColor = [UIColor clearColor];
     self.searchTableView.tableHeaderView = searchHeader;
     
-    UITextField * searchField = [[UITextField alloc]initWithFrame:searchFieldFrame];
-    [searchHeader addSubview:searchField];
+    self.searchField = [[UITextField alloc]initWithFrame:searchFieldFrame];
+    self.searchField.backgroundColor = [UIColor clearColor];
+    [self.searchField setBorderStyle:UITextBorderStyleRoundedRect];
+    [searchHeader addSubview:self.searchField];
+    
+    UIButton *searchButton = [UIButton buttonWithType:UIButtonTypeSystem];
+
+    [searchButton addTarget:self
+                     action:@selector(search)
+           forControlEvents:UIControlEventTouchUpInside];
+
+    searchButton.backgroundColor = [UIColor clearColor];
+    searchButton.frame = searchButtonFrame;
+    
+    UIImage *searchButtonImage = [UIImage imageNamed:@"search-2-32.png"];
+    [searchButton setBackgroundImage:searchButtonImage forState:UIControlStateNormal];
+    searchButton.frame = searchButtonFrame;
+    [searchHeader addSubview:searchButton];
+
     
     [self.view addSubview:self.searchTableView];
     [self.view bringSubviewToFront:self.searchTableView];
@@ -283,6 +305,12 @@
     
 }
 
+-(void)search{
+
+    [self.view endEditing:YES];
+    [self searchCityNameWithParams:self.searchField.text];
+
+};
 
 -(void)searchCityNameWithParams:(NSString*) searchCityName{
     
@@ -313,7 +341,7 @@
              [self.cityListArray addObject:cityName];
              NSLog(@"cityName: %@", cityName);
          }
-         
+         [self.searchTableView reloadData];
          
      }
      onFailure:^(NSError *error, NSInteger statusCode) {
@@ -409,7 +437,7 @@
              [self.conditionsDaylyWeatherForecastListArray addObject:fork];
 //             NSLog(@"fork: %@", fork);
          }
-         [self searchCityNameWithParams:@"Kherson"];
+//         [self searchCityNameWithParams:@"Kherson"];
          [self displayCondition];
      }
      onFailure:^(NSError *error, NSInteger statusCode) {
@@ -507,41 +535,51 @@
     cell.textLabel.textColor = [UIColor whiteColor];
     cell.detailTextLabel.textColor = [UIColor whiteColor];
    
-    if (indexPath.section == 0) {
-        // 1
-        if (indexPath.row == 0) {
-            [self configureHeaderCell:cell title:@"Hourly Forecast"];
+    if (tableView != self.searchTableView){
+        if (indexPath.section == 0) {
+            // 1
+            if (indexPath.row == 0) {
+                [self configureHeaderCell:cell title:@"Hourly Forecast"];
+            }
+            else {
+                cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
+                cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
+                
+                WXCondition *hourlyForcast = self.conditionsHourlyWeatherForecastListArray[indexPath.row];
+                
+                cell.textLabel.text = [self.tableHourlyFormatter stringFromDate:hourlyForcast.date];
+                cell.detailTextLabel.text = [NSString stringWithFormat:@"%.0f°",hourlyForcast.temperature.floatValue];
+                cell.imageView.image = [UIImage imageNamed:[hourlyForcast imageName]];
+                cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
+            }
         }
-        else {
-            cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
-            cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
-            
-            WXCondition *hourlyForcast = self.conditionsHourlyWeatherForecastListArray[indexPath.row];
-            
-            cell.textLabel.text = [self.tableHourlyFormatter stringFromDate:hourlyForcast.date];
-            cell.detailTextLabel.text = [NSString stringWithFormat:@"%.0f°",hourlyForcast.temperature.floatValue];
-            cell.imageView.image = [UIImage imageNamed:[hourlyForcast imageName]];
-            cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
+        else if (indexPath.section == 1) {
+            // 1
+            if (indexPath.row == 0) {
+                [self configureHeaderCell:cell title:@"Daily Forecast"];
+            }
+            else {
+                cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
+                cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
+                WXDailyForecast *daylyForcast = self.conditionsDaylyWeatherForecastListArray[indexPath.row];
+                
+                cell.textLabel.text = [self.tableDailyFormatter stringFromDate:daylyForcast.date];
+                cell.detailTextLabel.text = [NSString stringWithFormat:@"%.0f° / %.0f°",
+                                             daylyForcast.tempLow.floatValue,
+                                             daylyForcast.tempHigh.floatValue];
+                cell.imageView.image = [UIImage imageNamed:[daylyForcast imageName]];
+                cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
+                
+            }
         }
     }
-    else if (indexPath.section == 1) {
-        // 1
-        if (indexPath.row == 0) {
-            [self configureHeaderCell:cell title:@"Daily Forecast"];
-        }
-        else {
-            cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
-            cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
-            WXDailyForecast *daylyForcast = self.conditionsDaylyWeatherForecastListArray[indexPath.row];
-
-            cell.textLabel.text = [self.tableDailyFormatter stringFromDate:daylyForcast.date];
-            cell.detailTextLabel.text = [NSString stringWithFormat:@"%.0f° / %.0f°",
-                                         daylyForcast.tempLow.floatValue,
-                                         daylyForcast.tempHigh.floatValue];
-            cell.imageView.image = [UIImage imageNamed:[daylyForcast imageName]];
-            cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
-
-        }
+    else {
+        cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
+        cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
+        NSString *cityName = self.cityListArray[indexPath.row];
+        cell.textLabel.text = cityName;
+    
+    
     }
     
     return cell;

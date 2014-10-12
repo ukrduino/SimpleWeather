@@ -13,6 +13,7 @@
 		A52FE69A19D28B2800620086 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A52FE69819D28B2800620086 /* Main.storyboard */; };
 		A52FE69C19D28B2800620086 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A52FE69B19D28B2800620086 /* Images.xcassets */; };
 		A52FE6A819D28B2800620086 /* SimpleWeatherTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A52FE6A719D28B2800620086 /* SimpleWeatherTests.m */; };
+		A5834D7A19EACB5E005EB2DA /* search-2-32.png in Resources */ = {isa = PBXBuildFile; fileRef = A5834D7919EACB5E005EB2DA /* search-2-32.png */; };
 		A5882F1919E6DDB300E32CA1 /* support-32.png in Resources */ = {isa = PBXBuildFile; fileRef = A5882F1819E6DDB300E32CA1 /* support-32.png */; };
 		A5D96F7E19D5768C00C237B5 /* WXManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A5D96F7D19D5768C00C237B5 /* WXManager.m */; };
 		A5D96F8119D576B300C237B5 /* WXCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = A5D96F8019D576B300C237B5 /* WXCondition.m */; };
@@ -69,6 +70,7 @@
 		A52FE6A119D28B2800620086 /* SimpleWeatherTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleWeatherTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A52FE6A619D28B2800620086 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A52FE6A719D28B2800620086 /* SimpleWeatherTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleWeatherTests.m; sourceTree = "<group>"; };
+		A5834D7919EACB5E005EB2DA /* search-2-32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "search-2-32.png"; sourceTree = "<group>"; };
 		A5882F1819E6DDB300E32CA1 /* support-32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "support-32.png"; sourceTree = "<group>"; };
 		A5D96F7C19D5768C00C237B5 /* WXManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WXManager.h; sourceTree = "<group>"; };
 		A5D96F7D19D5768C00C237B5 /* WXManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WXManager.m; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 		A5DFFA6519D2DCC000B1DD4B /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				A5834D7919EACB5E005EB2DA /* search-2-32.png */,
 				A5882F1819E6DDB300E32CA1 /* support-32.png */,
 				A5DFFA6619D2DCC000B1DD4B /* bg.png */,
 				A5DFFA6719D2DCC000B1DD4B /* bg@2x.png */,
@@ -325,6 +328,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A5DFFA9A19D2DCC000B1DD4B /* weather-tstorm@2x.png in Resources */,
+				A5834D7A19EACB5E005EB2DA /* search-2-32.png in Resources */,
 				A5DFFA8319D2DCC000B1DD4B /* weather-broken.png in Resources */,
 				A5DFFA8719D2DCC000B1DD4B /* weather-few-night.png in Resources */,
 				A5DFFA8519D2DCC000B1DD4B /* weather-clear.png in Resources */,
