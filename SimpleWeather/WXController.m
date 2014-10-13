@@ -43,7 +43,7 @@
 @property (nonatomic, strong) UILabel *date;
 @property (nonatomic, strong) UILabel *time;
 @property (nonatomic, strong) UIImageView *iconView;
-@property (nonatomic, strong) NSString *city;
+@property (nonatomic, strong) NSString *cityId;
 @property (nonatomic, strong) UIButton *settings;
 @property (nonatomic, strong) UITextField * searchField;
 
@@ -198,21 +198,12 @@
                       action:@selector(showSearchView)
             forControlEvents:UIControlEventTouchUpInside];
     
-    UIImage *btnImage = [UIImage imageNamed:@"support-32.png"];
+    UIImage *btnImage = [UIImage imageNamed:@"worldwide-location-32.png"];
     [self.settings setBackgroundImage:btnImage forState:UIControlStateNormal];
     self.settings.frame = settings;
     [header addSubview:self.settings];
     
-    // TODO город где получаем прогноз - сделать поиск.
-    self.city = @"Kherson";
-    // Параметры запроса к серверу
-    self.params = [[NSMutableDictionary alloc]  initWithObjectsAndKeys:
-                   self.city,  @"q",
-                   @"metric", @"units",
-                   @"ru",     @"lang",
-                   @"json",   @"mode", nil
-                   ];
-    
+   
     self.tableHourlyFormatter = [[NSDateFormatter alloc] init];
     self.tableHourlyFormatter.dateFormat = @"h a";
     
@@ -225,10 +216,7 @@
     self.dateFormatter = [[NSDateFormatter alloc] init];
     self.dateFormatter.dateFormat = @"dd.MM.yyyy";
     
-    
-
-    
-    
+  
     [self fetchCurrentWeatherConditions];
 
 
@@ -241,75 +229,95 @@
 
 -(void)showSearchView{
     
-   //// http://ios-blog.co.uk/tutorials/quick-tips/storing-data-with-nsuserdefaults/
-//
-//    // save data to NSUserDefaults
-//    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-//    [defaults setInteger:9001 forKey:@"HighScore"];
-//    [defaults synchronize];
-//    // reed data from NSUserDefaults
-//    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-//    NSInteger theHighScore = [defaults integerForKey:@"HighScore"];
-//
-//
     // Установка settingsTableView
     self.searchTableView = [[UITableView alloc] init];
     self.searchTableView.backgroundColor = [UIColor clearColor];
     self.searchTableView.delegate = self;
     self.searchTableView.dataSource = self;
     self.searchTableView.separatorColor = [UIColor colorWithWhite:1 alpha:0.2];
-//    self.tableView.pagingEnabled = YES; // постраничная прокрутка
-   
+    // Убирает пустые ячейки в таблице (разделители между ними)
+    self.searchTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    //    self.tableView.pagingEnabled = YES; // постраничная прокрутка
+    
     CGRect searchHeaderFrame = CGRectMake(0,
                                           0,
                                           self.view.bounds.size.width,
                                           100);
-    CGRect searchFieldFrame = CGRectMake((self.view.bounds.size.width - 200)/2,
-                                          35,
-                                          170,
-                                          32);
-    CGRect searchButtonFrame = CGRectMake(searchFieldFrame.origin.x+172,
+    CGRect searchFieldFrame = CGRectMake((self.view.bounds.size.width-170)/2,
                                          35,
-                                         32,
+                                         170,
                                          32);
+    CGRect searchButtonFrame = CGRectMake(searchFieldFrame.origin.x+178,
+                                          35,
+                                          32,
+                                          32);
+    
+    CGRect backButtonFrame = CGRectMake(searchFieldFrame.origin.x-40,
+                                        35,
+                                        32,
+                                        32);
     
     // Создание UIView для шапки таблицы
     UIView *searchHeader = [[UIView alloc] initWithFrame:searchHeaderFrame];
     searchHeader.backgroundColor = [UIColor clearColor];
     self.searchTableView.tableHeaderView = searchHeader;
     
+    
+    
+    // Кнопка поиска
+    UIButton *searchButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    [searchButton addTarget:self
+                     action:@selector(search)
+           forControlEvents:UIControlEventTouchUpInside];
+    
+    searchButton.backgroundColor = [UIColor clearColor];
+    searchButton.frame = searchButtonFrame;
+    // Кнопка назад
+    UIImage *searchButtonImage = [UIImage imageNamed:@"search-2-32.png"];
+    [searchButton setBackgroundImage:searchButtonImage forState:UIControlStateNormal];
+    [searchHeader addSubview:searchButton];
+    
+    UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    [backButton addTarget:self
+                   action:@selector(backToMainScreen)
+         forControlEvents:UIControlEventTouchUpInside];
+    
+    backButton.backgroundColor = [UIColor clearColor];
+    backButton.frame = backButtonFrame;
+    
+    UIImage *backButtonImage = [UIImage imageNamed:@"arrow-96-32.png"];
+    [backButton setBackgroundImage:backButtonImage forState:UIControlStateNormal];
+    [searchHeader addSubview:backButton];
+    
     self.searchField = [[UITextField alloc]initWithFrame:searchFieldFrame];
     self.searchField.backgroundColor = [UIColor clearColor];
     [self.searchField setBorderStyle:UITextBorderStyleRoundedRect];
     [searchHeader addSubview:self.searchField];
     
-    UIButton *searchButton = [UIButton buttonWithType:UIButtonTypeSystem];
-
-    [searchButton addTarget:self
-                     action:@selector(search)
-           forControlEvents:UIControlEventTouchUpInside];
-
-    searchButton.backgroundColor = [UIColor clearColor];
-    searchButton.frame = searchButtonFrame;
-    
-    UIImage *searchButtonImage = [UIImage imageNamed:@"search-2-32.png"];
-    [searchButton setBackgroundImage:searchButtonImage forState:UIControlStateNormal];
-    searchButton.frame = searchButtonFrame;
-    [searchHeader addSubview:searchButton];
-
     
     [self.view addSubview:self.searchTableView];
-    [self.view bringSubviewToFront:self.searchTableView];
+    //    [self.view bringSubviewToFront:self.searchTableView];
     [self.view sendSubviewToBack:self.tableView];
-    self.blurredImageView.alpha = 1;
+    self.blurredImageView.alpha = 0.8;
     
 }
 
 -(void)search{
 
-    [self.view endEditing:YES];
+//    [self.view endEditing:YES];
     [self searchCityNameWithParams:self.searchField.text];
 
+};
+-(void)backToMainScreen{
+    
+//    [self.view endEditing:YES];
+    [self.view bringSubviewToFront:self.tableView];
+    [self.view sendSubviewToBack:self.searchTableView];
+    self.blurredImageView.alpha = 0;
+    
+    
 };
 
 -(void)searchCityNameWithParams:(NSString*) searchCityName{
@@ -353,14 +361,23 @@
     
 }
 
-
-
-
-
-
 // Fetching Current Conditions
 -(void)fetchCurrentWeatherConditions {
     
+    // http://ios-blog.co.uk/tutorials/quick-tips/storing-data-with-nsuserdefaults/
+    
+    
+        // reed data from NSUserDefaults
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSString *cityId = [defaults objectForKey:@"cityId"];
+    
+    
+    self.params = [[NSMutableDictionary alloc]  initWithObjectsAndKeys:
+                   cityId,  @"id",
+                   @"metric", @"units",
+                   @"ru",     @"lang",
+                   @"json",   @"mode", nil
+                   ];
     [[WXManager sharedManager]
      fetchWeatherDataForPeriod:@"weather"
      withParams:self.params
@@ -539,7 +556,7 @@
         if (indexPath.section == 0) {
             // 1
             if (indexPath.row == 0) {
-                [self configureHeaderCell:cell title:@"Hourly Forecast"];
+                [self configureHeaderCell:cell title:@"Суточний прогноз"];
             }
             else {
                 cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
@@ -556,7 +573,7 @@
         else if (indexPath.section == 1) {
             // 1
             if (indexPath.row == 0) {
-                [self configureHeaderCell:cell title:@"Daily Forecast"];
+                [self configureHeaderCell:cell title:@"Недельный прогноз"];
             }
             else {
                 cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
@@ -577,7 +594,12 @@
         cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
         cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
         NSString *cityName = self.cityListArray[indexPath.row];
+        NSMutableDictionary *cityDict = self.searchtListArray[indexPath.row];
+        NSMutableDictionary *sysDict = [cityDict objectForKey:@"sys"];
+        NSString *country = [sysDict objectForKey:@"country"];
+                                        
         cell.textLabel.text = cityName;
+        cell.detailTextLabel.text = country;
     
     
     }
@@ -588,8 +610,35 @@
 #pragma mark - UITableViewDelegate
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (tableView !=self.searchTableView) {
+  
+    
     NSInteger cellCount = [self tableView:tableView numberOfRowsInSection:indexPath.section];
-    return self.screenHeight / (CGFloat)cellCount;
+        return self.screenHeight / (CGFloat)cellCount;}
+    else {
+        return 44;
+    }
+        
+        
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    
+    NSDictionary *citydict = [self.searchtListArray objectAtIndex:indexPath.row];
+    self.cityId = [citydict objectForKey:@"id"];
+    // save data to NSUserDefaults
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:self.cityId forKey:@"cityId"];
+    [defaults synchronize];
+
+    [self fetchCurrentWeatherConditions];
+    [self.view bringSubviewToFront:self.tableView];
+    [self.view sendSubviewToBack:self.searchTableView];
+    self.blurredImageView.alpha = 0;
+    
+    
 }
 
 #pragma mark - UIScrollViewDelegate
