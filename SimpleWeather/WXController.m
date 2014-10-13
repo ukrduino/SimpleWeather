@@ -296,6 +296,12 @@
     [self.searchField setBorderStyle:UITextBorderStyleRoundedRect];
     [searchHeader addSubview:self.searchField];
     
+//    Swift Xcode 6: keyboard not showing up in ios simulator
+//
+//    iOS Simulator -> Hardware -> Keyboard
+//    Uncheck "Connect Hardware Keyboard"
+//    Mine was checked because I was using my mac keyboard, but if you make sure it is unchecked the iPhone keyboard will always come up.
+    
     
     [self.view addSubview:self.searchTableView];
     //    [self.view bringSubviewToFront:self.searchTableView];
@@ -306,13 +312,14 @@
 
 -(void)search{
 
-//    [self.view endEditing:YES];
+    
+    [self.view endEditing:YES];
     [self searchCityNameWithParams:self.searchField.text];
 
 };
 -(void)backToMainScreen{
     
-//    [self.view endEditing:YES];
+    [self.view endEditing:YES];
     [self.view bringSubviewToFront:self.tableView];
     [self.view sendSubviewToBack:self.searchTableView];
     self.blurredImageView.alpha = 0;
