@@ -86,7 +86,7 @@
 -(void)searchCityNameWithParams:(NSDictionary*) searchParams // название города который ищем, тип данных
                       onSuccess:(void(^)(NSDictionary* weatherJsonDict)) success // возвращаем словарь с погодой для городов с похож назв для извлечения из него названий городов
                       onFailure:(void(^)(NSError* error, NSInteger statusCode)) failure{
-    NSLog(@"params: %@", searchParams);
+
     
     [self.requestOperationManager
      GET:@"find?"
@@ -94,13 +94,8 @@
      success:^(AFHTTPRequestOperation *operation, NSDictionary* responseObject) {
          
          
-         
-         NSLog(@"WXManager responseObject : %@", responseObject);
-         
          // преобразование JSON в словарь
          NSDictionary *weatherJsonDict = responseObject;
-         
-         //             NSLog(@"WXManager weatherJsonDict: %@", weatherJsonDict);
          
          
          // возвращаем словарь weatherJsonDict

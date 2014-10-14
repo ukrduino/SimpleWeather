@@ -14,7 +14,7 @@
 
 
 
--(void)fetchCurrentWeatherConditions;
+-(void)fetchCurrentWeatherConditions:(UIRefreshControl *)refreshControl;
 -(void)fetchHourlyWeatherForecast;
 -(void)fetchDaylyWeatherForecast;
 -(void)searchCityNameWithParams:(NSString*) searchCityName;

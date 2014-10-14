@@ -46,6 +46,7 @@
 @property (nonatomic, strong) NSString *cityId;
 @property (nonatomic, strong) UIButton *settings;
 @property (nonatomic, strong) UITextField * searchField;
+@property (nonatomic, strong) UIRefreshControl *refreshControl;
 
 @property (nonatomic, strong) NSDateFormatter *tableHourlyFormatter;
 @property (nonatomic, strong) NSDateFormatter *tableDailyFormatter;
@@ -216,8 +217,20 @@
     self.dateFormatter = [[NSDateFormatter alloc] init];
     self.dateFormatter.dateFormat = @"dd.MM.yyyy";
     
+
+    UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
+    [refreshControl addTarget:self action:@selector(fetchCurrentWeatherConditions:) forControlEvents:UIControlEventValueChanged];
+    
+    [self.tableView addSubview:refreshControl];
   
-    [self fetchCurrentWeatherConditions];
+    
+//    - (void)refresh:(UIRefreshControl *)refreshControl {
+//        [refreshControl endRefreshing];
+//    }
+    
+    
+    
+    [self fetchCurrentWeatherConditions:(UIRefreshControl *)self.refreshControl];
 
 
 }
@@ -237,6 +250,10 @@
     self.searchTableView.separatorColor = [UIColor colorWithWhite:1 alpha:0.2];
     // Убирает пустые ячейки в таблице (разделители между ними)
     self.searchTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    
+    
+    
+    
     //    self.tableView.pagingEnabled = YES; // постраничная прокрутка
     
     CGRect searchHeaderFrame = CGRectMake(0,
@@ -317,6 +334,7 @@
     [self searchCityNameWithParams:self.searchField.text];
 
 };
+
 -(void)backToMainScreen{
     
     [self.view endEditing:YES];
@@ -327,7 +345,7 @@
     
 };
 
--(void)searchCityNameWithParams:(NSString*) searchCityName{
+-(void)searchCityNameWithParams:(NSString*) searchCityName {
     
     NSMutableDictionary * searchParams = [[NSMutableDictionary alloc]  initWithObjectsAndKeys:
                                           searchCityName,  @"q",
@@ -342,19 +360,14 @@
      {
          
          self.searchtListArray = [[NSMutableArray alloc]initWithArray:weatherJsonDict[@"list"]];
-         NSLog(@"searchtListArray: %@", self.searchtListArray);
-         
          self.cityListArray = [NSMutableArray new];
          for (int i = 0; i < [self.searchtListArray count]; i++)
          {
-             NSLog(@"searchtListArray #%i: %@", i, [self.searchtListArray objectAtIndex:i]);
              
              NSDictionary * cityDict =[self.searchtListArray objectAtIndex:i];
-             
              NSString *cityName = [cityDict valueForKey:@"name"];
-             
              [self.cityListArray addObject:cityName];
-             NSLog(@"cityName: %@", cityName);
+
          }
          [self.searchTableView reloadData];
          
@@ -369,11 +382,10 @@
 }
 
 // Fetching Current Conditions
--(void)fetchCurrentWeatherConditions {
-    
-    // http://ios-blog.co.uk/tutorials/quick-tips/storing-data-with-nsuserdefaults/
+-(void)fetchCurrentWeatherConditions:(UIRefreshControl *)refreshControl  {
     
     
+        // http://ios-blog.co.uk/tutorials/quick-tips/storing-data-with-nsuserdefaults/
         // reed data from NSUserDefaults
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         NSString *cityId = [defaults objectForKey:@"cityId"];
@@ -393,8 +405,9 @@
          // преобразование JSON в словарь и WXCondition
          
          self.Condition = [MTLJSONAdapter modelOfClass:WXCondition.class fromJSONDictionary:weatherJsonDict error:NULL];
- //        NSLog(@"self.Condition = %@", self.Condition);
+         NSLog(@"Condition = %@", self.Condition);
          [self fetchHourlyWeatherForecast];
+         [refreshControl endRefreshing];
          
      }
      onFailure:^(NSError *error, NSInteger statusCode) {
@@ -416,14 +429,13 @@
          int i = 0;
          int d =(int)[self.hourlyWeatherForecastListArray count];
          for(i=0; i<d-7; i++) {
-//             NSLog(@"removeObjectAtIndex:%i",d-1-i);
+
              [self.hourlyWeatherForecastListArray removeObjectAtIndex:d-1-i];
              
          }
          self.conditionsHourlyWeatherForecastListArray = [NSMutableArray new];
          for (int i = 0; i < [self.hourlyWeatherForecastListArray count]; i++)
          {
-//             NSLog(@"hourlyWeatherForecastListArray #%i: %@", i, [self.hourlyWeatherForecastListArray objectAtIndex:i]);
              
              WXCondition * cond = [MTLJSONAdapter modelOfClass:WXCondition.class fromJSONDictionary:[self.hourlyWeatherForecastListArray objectAtIndex:i] error:NULL];
              [self.conditionsHourlyWeatherForecastListArray addObject:cond];
@@ -450,12 +462,10 @@
      {
          
          self.daylyWeatherForecastListArray = [[NSMutableArray alloc]initWithArray:weatherJsonDict[@"list"]];
-//         NSLog(@"daylyWeatherForecastListArray: %@", self.daylyWeatherForecastListArray);
-         
          self.conditionsDaylyWeatherForecastListArray = [NSMutableArray new];
          for (int i = 0; i < [self.daylyWeatherForecastListArray count]; i++)
          {
-//             NSLog(@"daylyWeatherForecastListArray #%i: %@", i, [self.daylyWeatherForecastListArray objectAtIndex:i]);
+
              
              WXDailyForecast * fork = [MTLJSONAdapter modelOfClass:WXDailyForecast.class fromJSONDictionary:[self.daylyWeatherForecastListArray objectAtIndex:i] error:NULL];
              [self.conditionsDaylyWeatherForecastListArray addObject:fork];
@@ -490,8 +500,9 @@
         
         self.conditionsLabel.text = [[self.Condition.conditionDescription objectAtIndex:0] capitalizedString];
         self.iconView.image = [UIImage imageNamed:[self.Condition imageName]];
-        
+
         [self.tableView reloadData];
+
     
 }
 
@@ -640,7 +651,7 @@
     [defaults setObject:self.cityId forKey:@"cityId"];
     [defaults synchronize];
 
-    [self fetchCurrentWeatherConditions];
+    [self fetchCurrentWeatherConditions:(UIRefreshControl *)self.refreshControl];
     [self.view bringSubviewToFront:self.tableView];
     [self.view sendSubviewToBack:self.searchTableView];
     self.blurredImageView.alpha = 0;
