@@ -12,10 +12,20 @@
 #import "WXCondition.h"
 #import "WXDailyForecast.h"
 #import "WXManager.h"
+// #import "QuartzCore/QuartzCore.h"
 
 
 
 @interface WXController ()
+
+// Индикатор UIActivityIndicatorView
+
+@property (nonatomic, retain) UIActivityIndicatorView * activityView;
+@property (nonatomic, retain) UIView *loadingView;
+@property (nonatomic, retain) UILabel *loadingLabel;
+
+
+
 
 @property (nonatomic, strong) UIImageView *backgroundImageView;
 @property (nonatomic, strong) UIImageView *blurredImageView;
@@ -228,16 +238,34 @@
 //        [refreshControl endRefreshing];
 //    }
     
+    // Индикатор UIActivityIndicatorView
+    
+    self.loadingView = [[UIView alloc] initWithFrame:CGRectMake(75, 155, 170, 170)];
+    self.loadingView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.5];
+    self.loadingView.clipsToBounds = YES;
+    self.loadingView.layer.cornerRadius = 10.0;
+    
+    self.activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    self.activityView.frame = CGRectMake(65, 40, self.activityView.bounds.size.width, self.activityView.bounds.size.height);
+    [self.loadingView addSubview:self.activityView];
+    
+    self.loadingLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 115, 130, 22)];
+    self.loadingLabel.backgroundColor = [UIColor clearColor];
+    self.loadingLabel.textColor = [UIColor whiteColor];
+    self.loadingLabel.adjustsFontSizeToFitWidth = YES;
+    self.loadingLabel.textAlignment = NSTextAlignmentCenter;
+    self.loadingLabel.text = @"Загрузка...";
+    [self.loadingView addSubview:self.loadingLabel];
+    
+    [self.view addSubview:self.loadingView];
+    [self.activityView startAnimating];
+    
     
     
     [self fetchCurrentWeatherConditions:self.refreshControl];
 
 
 }
-
-
-
-
 
 
 -(void)showSearchView{
@@ -346,6 +374,11 @@
 
 -(void)searchCityNameWithParams:(NSString*) searchCityName {
     
+    // Индикатор UIActivityIndicatorView
+    
+    [self.view addSubview:self.loadingView];
+    [self.activityView startAnimating];
+    
     NSMutableDictionary * searchParams = [[NSMutableDictionary alloc]  initWithObjectsAndKeys:
                                           searchCityName,  @"q",
                                           @"json",   @"mode",
@@ -368,7 +401,11 @@
              [self.cityListArray addObject:cityName];
 
          }
+         
+// Индикатор UIActivityIndicatorView
          [self.searchTableView reloadData];
+         [self.activityView stopAnimating];
+         [self.loadingView removeFromSuperview];
          
      }
      onFailure:^(NSError *error, NSInteger statusCode) {
@@ -503,6 +540,11 @@
         self.iconView.image = [UIImage imageNamed:[self.Condition imageName]];
 
         [self.tableView reloadData];
+    
+    // Индикатор UIActivityIndicatorView
+    
+        [self.activityView stopAnimating];
+        [self.loadingView removeFromSuperview];
 
     
 }
@@ -679,6 +721,9 @@
     
     [self fetchCurrentWeatherConditions:self.refreshControl];
     self.blurredImageView.alpha = 0;
+    
+    [self.view addSubview:self.loadingView];
+    [self.activityView startAnimating];
 
     
     
