@@ -230,7 +230,7 @@
     
     
     
-    [self fetchCurrentWeatherConditions:(UIRefreshControl *)self.refreshControl];
+    [self fetchCurrentWeatherConditions:self.refreshControl];
 
 
 }
@@ -321,7 +321,6 @@
     
     
     [self.view addSubview:self.searchTableView];
-    //    [self.view bringSubviewToFront:self.searchTableView];
     [self.view sendSubviewToBack:self.tableView];
     self.blurredImageView.alpha = 0.8;
     
@@ -384,6 +383,7 @@
 // Fetching Current Conditions
 -(void)fetchCurrentWeatherConditions:(UIRefreshControl *)refreshControl  {
     
+
     
         // http://ios-blog.co.uk/tutorials/quick-tips/storing-data-with-nsuserdefaults/
         // reed data from NSUserDefaults
@@ -407,6 +407,7 @@
          self.Condition = [MTLJSONAdapter modelOfClass:WXCondition.class fromJSONDictionary:weatherJsonDict error:NULL];
          NSLog(@"Condition = %@", self.Condition);
          [self fetchHourlyWeatherForecast];
+         
          [refreshControl endRefreshing];
          
      }
@@ -524,8 +525,31 @@
         return 2;
     }
     else {
-        return 1;
+        if ([self.cityListArray count]>0) {
+            self.searchTableView.backgroundView = nil;
+
+            return 1;
+            
+        } else {
+            
+            // Display a message when the table is empty
+            UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
+            
+            messageLabel.text = @"Введите название города для поиска";
+            messageLabel.textColor = [UIColor whiteColor];
+            messageLabel.numberOfLines = 0;
+            messageLabel.textAlignment = NSTextAlignmentCenter;
+            messageLabel.font = [UIFont fontWithName:@"Palatino-Italic" size:20];
+            [messageLabel sizeToFit];
+            
+            self.searchTableView.backgroundView = messageLabel;
+            self.searchTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+            
+        }
+        
+        return 0;
     }
+
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -643,7 +667,6 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     
-    
     NSDictionary *citydict = [self.searchtListArray objectAtIndex:indexPath.row];
     self.cityId = [citydict objectForKey:@"id"];
     // save data to NSUserDefaults
@@ -651,10 +674,12 @@
     [defaults setObject:self.cityId forKey:@"cityId"];
     [defaults synchronize];
 
-    [self fetchCurrentWeatherConditions:(UIRefreshControl *)self.refreshControl];
-    [self.view bringSubviewToFront:self.tableView];
     [self.view sendSubviewToBack:self.searchTableView];
+    [self.view bringSubviewToFront:self.tableView];
+    
+    [self fetchCurrentWeatherConditions:self.refreshControl];
     self.blurredImageView.alpha = 0;
+
     
     
 }
@@ -667,8 +692,12 @@
     CGFloat position = MAX(scrollView.contentOffset.y, 0.0);
     // 2
     CGFloat percent = MIN(position / height, 1.0);
-    // 3
-    self.blurredImageView.alpha = percent;
+    // Если скрол вью это self.tableView то постепенное затемнение работает.
+        if(scrollView == self.tableView) {
+            // its your tableView
+                self.blurredImageView.alpha = percent;
+        }
+
 }
 
 - (void)viewWillLayoutSubviews {
