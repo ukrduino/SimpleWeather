@@ -19,6 +19,7 @@
 @interface WXController ()
 
 // Индикатор UIActivityIndicatorView
+// http://nullpointr.wordpress.com/page/2/
 
 @property (nonatomic, retain) UIActivityIndicatorView * activityView;
 @property (nonatomic, retain) UIView *loadingView;
@@ -261,11 +262,35 @@
     [self.activityView startAnimating];
     
     
+//    Add UIGestureRecognizer to swipe left to right right to left
+//    http://stackoverflow.com/questions/17540481/add-uigesturerecognizer-to-swipe-left-to-right-right-to-left-my-views
+    // Swipe Left
+    UISwipeGestureRecognizer * swipeleft=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeleft:)];
+    swipeleft.direction=UISwipeGestureRecognizerDirectionLeft;
+    [self.view addGestureRecognizer:swipeleft];
+    // SwipeRight
+    UISwipeGestureRecognizer * swiperight=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swiperight:)];
+    swiperight.direction=UISwipeGestureRecognizerDirectionRight;
+    [self.view addGestureRecognizer:swiperight];
+    
+    
+    
     
     [self fetchCurrentWeatherConditions:self.refreshControl];
 
 
 }
+
+-(void)swipeleft:(UISwipeGestureRecognizer*)gestureRecognizer
+{
+    [self showSearchView];
+}
+
+-(void)swiperight:(UISwipeGestureRecognizer*)gestureRecognizer
+{
+    [self backToMainScreen];
+}
+
 
 
 -(void)showSearchView{
@@ -346,10 +371,19 @@
 //    iOS Simulator -> Hardware -> Keyboard
 //    Uncheck "Connect Hardware Keyboard"
 //    Mine was checked because I was using my mac keyboard, but if you make sure it is unchecked the iPhone keyboard will always come up.
+
+//  Анимация выплывание страницы поиска
+
+    CATransition *animation = [CATransition animation];
+    [animation setDuration:0.3];
+    [animation setType:kCATransitionMoveIn];
+    [animation setSubtype:kCATransitionFromRight];
+    [self.searchTableView.layer addAnimation:animation forKey:nil];
     
     
     [self.view addSubview:self.searchTableView];
     [self.view sendSubviewToBack:self.tableView];
+    
     self.blurredImageView.alpha = 0.8;
     
 }
@@ -365,6 +399,17 @@
 -(void)backToMainScreen{
     
     [self.view endEditing:YES];
+    
+    //  Анимация выплывание страницы поиска
+    
+    CATransition *animation = [CATransition animation];
+    [animation setDuration:0.3];
+    [animation setType:kCATransitionMoveIn];
+    [animation setSubtype:kCATransitionFromLeft];
+    [self.tableView.layer addAnimation:animation forKey:nil];
+    
+    
+    
     [self.view bringSubviewToFront:self.tableView];
     [self.view sendSubviewToBack:self.searchTableView];
     self.blurredImageView.alpha = 0;
