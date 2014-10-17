@@ -12,41 +12,39 @@
 #import "WXCondition.h"
 #import "WXDailyForecast.h"
 #import "WXManager.h"
-// #import "QuartzCore/QuartzCore.h"
+
 
 
 
 @interface WXController ()
 
-// Индикатор UIActivityIndicatorView
+#pragma mark - ИНДИКАТОР UIActivityIndicatorView
 // http://nullpointr.wordpress.com/page/2/
 
 @property (nonatomic, retain) UIActivityIndicatorView * activityView;
 @property (nonatomic, retain) UIView *loadingView;
 @property (nonatomic, retain) UILabel *loadingLabel;
 
+#pragma mark - ОСНОВНЫЕ ЭЛЕМЕНТЫ
+@property (nonatomic, strong) UIImageView *backgroundImageView; // задний фон
+@property (nonatomic, strong) UIImageView *blurredImageView; // фильтр размытия
 
+@property (nonatomic, strong) UITableView *tableView; // основное окно
+@property (nonatomic, strong) UITableView *searchTableView; // окно поиска города
+@property (nonatomic, strong) UITableView *settingsTableView; // окно настройки
 
-
-@property (nonatomic, strong) UIImageView *backgroundImageView;
-@property (nonatomic, strong) UIImageView *blurredImageView;
-@property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) UITableView *searchTableView;
-@property (nonatomic, assign) CGFloat screenHeight;
-
+#pragma mark - ХРАНЕНИЕ И ОБРАБОТКА ДАННЫХ
 @property (nonatomic, strong) WXCondition *Condition; // экз класса WXCondition с текущими погодными условиями
-
 @property (nonatomic, strong) NSMutableDictionary *params; // параметры запроса к серверу
 @property (nonatomic, strong) NSMutableArray *conditionsHourlyWeatherForecastListArray; // массив экз класса WXCondition по 3-х часовый погноз на 1 день
 @property (nonatomic, strong) NSMutableArray *conditionsDaylyWeatherForecastListArray; // массив экз класса WXCondition погноз на 5 дней
-
 @property (nonatomic, strong) NSMutableArray *hourlyWeatherForecastListArray; //массив list из weatherJsonDict о 3-х часовый погноз на 1 день
 @property (nonatomic, strong) NSMutableArray *daylyWeatherForecastListArray; //массив list weatherJsonDict погноз на 5 дней
 @property (nonatomic, strong) NSMutableArray *searchtListArray;
 @property (nonatomic, strong) NSMutableArray *cityListArray;
 
-
 #pragma mark - ЭЛЕМЕНТЫ ОТОБРАЖЕНИИЯ ПОГОДЫ
+@property (nonatomic, assign) CGFloat screenHeight;
 @property (nonatomic, strong) UILabel *temperatureLabel;
 @property (nonatomic, strong) UILabel *hiloLabel;
 @property (nonatomic, strong) UILabel *cityLabel;
@@ -55,7 +53,7 @@
 @property (nonatomic, strong) UILabel *time;
 @property (nonatomic, strong) UIImageView *iconView;
 @property (nonatomic, strong) NSString *cityId;
-@property (nonatomic, strong) UIButton *settings;
+@property (nonatomic, strong) UIButton * goToSearchTableViewButton;
 @property (nonatomic, strong) UITextField * searchField;
 @property (nonatomic, strong) UIRefreshControl *refreshControl;
 
@@ -102,16 +100,17 @@
     self.tableView.pagingEnabled = YES; // постраничная прокрутка
     [self.view addSubview:self.tableView];
     
-
-    
     // Размер шапки таблицы = размеру экрана
     CGRect headerFrame = [UIScreen mainScreen].bounds;
+    
     // Внутренние отступы
     CGFloat inset = 20;
+    
     // Высоты надписей
     CGFloat temperatureHeight = 110;
     CGFloat hiloHeight = 40;
     CGFloat iconHeight = 30;
+    
     // рамки (расположение) для надписей и кнопок
     CGRect hiloFrame = CGRectMake(inset,
                                   headerFrame.size.height - hiloHeight,
@@ -135,11 +134,7 @@
     CGRect conditionsFrame = iconFrame;
     conditionsFrame.size.width = self.view.bounds.size.width - (((2 * inset) + iconHeight) + 10);
     conditionsFrame.origin.x = iconFrame.origin.x + (iconHeight + 10);
-    
 
-    
-  
-    
     
     // Создание UIView для шапки таблицы
     UIView *header = [[UIView alloc] initWithFrame:headerFrame];
@@ -189,7 +184,7 @@
     self.time.textAlignment = NSTextAlignmentRight;
     [header addSubview:self.time];
     
-    // - ????
+    //погода текст
     self.conditionsLabel = [[UILabel alloc] initWithFrame:conditionsFrame];
     self.conditionsLabel.backgroundColor = [UIColor clearColor];
     self.conditionsLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
@@ -201,21 +196,20 @@
     self.iconView = [[UIImageView alloc] initWithFrame:iconFrame];
     self.iconView.contentMode = UIViewContentModeScaleAspectFit;
     self.iconView.backgroundColor = [UIColor clearColor];
-//    self.iconView.image = [UIImage imageNamed:@"weather-tstorm.png"];
     [header addSubview:self.iconView];
     
     // кнопка настройки
-    self.settings = [UIButton buttonWithType:UIButtonTypeCustom];
-    [self.settings addTarget:self
+    self.goToSearchTableViewButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [self.goToSearchTableViewButton addTarget:self
                       action:@selector(showSearchView)
             forControlEvents:UIControlEventTouchUpInside];
     
     UIImage *btnImage = [UIImage imageNamed:@"worldwide-location-32.png"];
-    [self.settings setBackgroundImage:btnImage forState:UIControlStateNormal];
-    self.settings.frame = settings;
-    [header addSubview:self.settings];
+    [self.goToSearchTableViewButton setBackgroundImage:btnImage forState:UIControlStateNormal];
+    self.goToSearchTableViewButton.frame = settings;
+    [header addSubview:self.goToSearchTableViewButton];
     
-   
+   //
     self.tableHourlyFormatter = [[NSDateFormatter alloc] init];
     self.tableHourlyFormatter.dateFormat = @"h a";
     
@@ -228,7 +222,7 @@
     self.dateFormatter = [[NSDateFormatter alloc] init];
     self.dateFormatter.dateFormat = @"dd.MM.yyyy";
     
-
+    // Индикатор  refreshControl
     UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
     [refreshControl addTarget:self action:@selector(fetchCurrentWeatherConditions:) forControlEvents:UIControlEventValueChanged];
     
@@ -261,18 +255,19 @@
     [self.view addSubview:self.loadingView];
     [self.activityView startAnimating];
     
-    
+#pragma mark - UISwipeGestureRecognizer
 //    Add UIGestureRecognizer to swipe left to right right to left
 //    http://stackoverflow.com/questions/17540481/add-uigesturerecognizer-to-swipe-left-to-right-right-to-left-my-views
-    // Swipe Left
-    UISwipeGestureRecognizer * swipeleft=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeleft:)];
-    swipeleft.direction=UISwipeGestureRecognizerDirectionLeft;
-    [self.view addGestureRecognizer:swipeleft];
-    // SwipeRight
-    UISwipeGestureRecognizer * swiperight=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swiperight:)];
-    swiperight.direction=UISwipeGestureRecognizerDirectionRight;
-    [self.view addGestureRecognizer:swiperight];
+
+    // Swipe Left on tableView
+    UISwipeGestureRecognizer * swipeLeftTableView=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeLeftTableView:)];
+    swipeLeftTableView.direction=UISwipeGestureRecognizerDirectionLeft;
+    [self.tableView addGestureRecognizer:swipeLeftTableView];
     
+    // SwipeRight on tableView
+    UISwipeGestureRecognizer * swipeRightTableView=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeRightTableView:)];
+    swipeRightTableView.direction=UISwipeGestureRecognizerDirectionRight;
+    [self.tableView addGestureRecognizer:swipeRightTableView];
     
     
     
@@ -281,14 +276,26 @@
 
 }
 
--(void)swipeleft:(UISwipeGestureRecognizer*)gestureRecognizer
+-(void)swipeLeftTableView:(UISwipeGestureRecognizer*)gestureRecognizer
 {
     [self showSearchView];
 }
 
--(void)swiperight:(UISwipeGestureRecognizer*)gestureRecognizer
+-(void)swipeRightTableView:(UISwipeGestureRecognizer*)gestureRecognizer
 {
-    [self backToMainScreen];
+    [self showSettingsView];
+
+}
+
+-(void)swipeRightSearchTableView:(UISwipeGestureRecognizer*)gestureRecognizer
+{
+    [self backToMainScreenFromView:self.searchTableView];
+    
+}
+
+-(void)swipeLeftSettingsTableView:(UISwipeGestureRecognizer*)gestureRecognizer
+{
+    [self backToMainScreenFromView:self.settingsTableView];
 }
 
 
@@ -351,7 +358,7 @@
     UIButton *backButton = [UIButton buttonWithType:UIButtonTypeCustom];
     
     [backButton addTarget:self
-                   action:@selector(backToMainScreen)
+                   action:@selector(backToMainScreenFromViewByButton)
          forControlEvents:UIControlEventTouchUpInside];
     
     backButton.backgroundColor = [UIColor clearColor];
@@ -380,6 +387,10 @@
     [animation setSubtype:kCATransitionFromRight];
     [self.searchTableView.layer addAnimation:animation forKey:nil];
     
+    // Swipe Left searchTableView
+    UISwipeGestureRecognizer * swipeRightSearchTableView=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeRightSearchTableView:)];
+    swipeRightSearchTableView.direction=UISwipeGestureRecognizerDirectionRight;
+    [self.searchTableView addGestureRecognizer:swipeRightSearchTableView];
     
     [self.view addSubview:self.searchTableView];
     [self.view sendSubviewToBack:self.tableView];
@@ -387,6 +398,15 @@
     self.blurredImageView.alpha = 0.8;
     
 }
+
+
+-(void)backToMainScreenFromViewByButton{
+    [self.view bringSubviewToFront:self.tableView];
+    [self.searchTableView removeFromSuperview];
+    self.blurredImageView.alpha = 0;
+
+}
+
 
 -(void)search{
 
@@ -396,22 +416,61 @@
 
 };
 
--(void)backToMainScreen{
+-(void)showSettingsView{
+    
+    // Установка settingsTableView
+    self.settingsTableView = [[UITableView alloc] init];
+    self.settingsTableView.backgroundColor = [UIColor clearColor];
+    self.settingsTableView.delegate = self;
+    self.settingsTableView.dataSource = self;
+    
+    self.settingsTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    
+    
+    CATransition *animationShowSettingsView = [CATransition animation];
+    [animationShowSettingsView setDuration:0.3];
+    [animationShowSettingsView setType:kCATransitionMoveIn];
+    [animationShowSettingsView setSubtype:kCATransitionFromLeft];
+    [self.settingsTableView.layer addAnimation:animationShowSettingsView forKey:@"showSettingsView"];
+    animationShowSettingsView.delegate = self;
+    
+   
+    // Swipe Left settingsTableView
+    UISwipeGestureRecognizer * swipeLeftSettingsTableView=[[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeLeftSettingsTableView:)];
+    swipeLeftSettingsTableView.direction=UISwipeGestureRecognizerDirectionLeft;
+    [self.settingsTableView addGestureRecognizer:swipeLeftSettingsTableView];
+    
+    [self.view addSubview:self.settingsTableView];
+    [self.view sendSubviewToBack:self.tableView];
+ 
+    
+    self.blurredImageView.alpha = 0.8;
+    
+    
+}
+
+
+-(void)backToMainScreenFromView:(UITableView*)tableView; {
     
     [self.view endEditing:YES];
     
     //  Анимация выплывание страницы поиска
     
-    CATransition *animation = [CATransition animation];
-    [animation setDuration:0.3];
-    [animation setType:kCATransitionMoveIn];
-    [animation setSubtype:kCATransitionFromLeft];
-    [self.tableView.layer addAnimation:animation forKey:nil];
+//    CATransition *animationFromLeft = [CATransition animation];
+//    [animationFromLeft setDuration:0.3];
+//    [animationFromLeft setType:kCATransitionMoveIn];
+//    [animationFromLeft setSubtype:kCATransitionFromLeft];
+//    [self.tableView.layer addAnimation:animationFromLeft forKey:nil];
     
+//    CATransition *animationFromRight = [CATransition animation];
+//    [animationFromRight setDuration:0.3];
+//    [animationFromRight setType:kCATransitionMoveIn];
+//    [animationFromRight setSubtype:kCATransitionFromRight];
+//    [self.tableView.layer addAnimation:animationFromRight forKey:nil];
     
     
     [self.view bringSubviewToFront:self.tableView];
-    [self.view sendSubviewToBack:self.searchTableView];
+    [tableView removeFromSuperview];
     self.blurredImageView.alpha = 0;
     
     
@@ -611,13 +670,14 @@
     if (tableView == self.tableView) {
         return 2;
     }
-    else {
+    if (tableView == self.searchTableView){
         if ([self.cityListArray count]>0) {
             self.searchTableView.backgroundView = nil;
 
             return 1;
             
-        } else {
+        }
+        else {
             
             // Display a message when the table is empty
             UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
@@ -636,7 +696,27 @@
         
         return 0;
     }
-
+    
+    if (tableView == self.settingsTableView){
+        
+        // Display a message when the table is empty
+        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
+        
+        messageLabel.text = @"Настройки";
+        messageLabel.textColor = [UIColor whiteColor];
+        messageLabel.numberOfLines = 0;
+        messageLabel.textAlignment = NSTextAlignmentCenter;
+        messageLabel.font = [UIFont fontWithName:@"Palatino-Italic" size:20];
+        [messageLabel sizeToFit];
+        
+        self.settingsTableView.backgroundView = messageLabel;
+        self.settingsTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        
+        
+    }
+    return 0;
+    
+    
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -799,6 +879,7 @@
     self.blurredImageView.frame = bounds;
     self.tableView.frame = bounds;
     self.searchTableView.frame = bounds;
+    self.settingsTableView.frame = bounds;
 }
 
 - (void)didReceiveMemoryWarning {
