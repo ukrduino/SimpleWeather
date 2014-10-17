@@ -455,19 +455,27 @@
     [self.view endEditing:YES];
     
     //  Анимация выплывание страницы поиска
-    
-//    CATransition *animationFromLeft = [CATransition animation];
-//    [animationFromLeft setDuration:0.3];
-//    [animationFromLeft setType:kCATransitionMoveIn];
-//    [animationFromLeft setSubtype:kCATransitionFromLeft];
-//    [self.tableView.layer addAnimation:animationFromLeft forKey:nil];
-    
-//    CATransition *animationFromRight = [CATransition animation];
-//    [animationFromRight setDuration:0.3];
-//    [animationFromRight setType:kCATransitionMoveIn];
-//    [animationFromRight setSubtype:kCATransitionFromRight];
-//    [self.tableView.layer addAnimation:animationFromRight forKey:nil];
-    
+    if (tableView == self.searchTableView) {
+        
+        CATransition *animationFromLeft = [CATransition animation];
+        [animationFromLeft setDuration:0.3];
+        [animationFromLeft setType:kCATransitionMoveIn];
+        [animationFromLeft setSubtype:kCATransitionFromLeft];
+        [self.tableView.layer addAnimation:animationFromLeft forKey:@"onTableView"];
+        
+        
+    }
+    else {
+       
+        CATransition *animationFromRight = [CATransition animation];
+        [animationFromRight setDuration:0.3];
+        [animationFromRight setType:kCATransitionMoveIn];
+        [animationFromRight setSubtype:kCATransitionFromRight];
+        [self.tableView.layer addAnimation:animationFromRight forKey:@"onTableView"];
+
+
+    }
+
     
     [self.view bringSubviewToFront:self.tableView];
     [tableView removeFromSuperview];
@@ -546,7 +554,7 @@
          // преобразование JSON в словарь и WXCondition
          
          self.Condition = [MTLJSONAdapter modelOfClass:WXCondition.class fromJSONDictionary:weatherJsonDict error:NULL];
-         NSLog(@"Condition = %@", self.Condition);
+//         NSLog(@"Condition = %@", self.Condition);
          [self fetchHourlyWeatherForecast];
          
          [refreshControl endRefreshing];
